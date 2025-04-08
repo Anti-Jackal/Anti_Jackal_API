@@ -1,9 +1,13 @@
 blinker==1.8.2
+certifi==2025.1.31
+charset-normalizer==3.4.1
 click==8.1.8
 ecdsa==0.19.1
 flask==3.0.3
+Flask-Cors==5.0.0
 flask-sqlalchemy==3.1.1
 greenlet==3.1.1
+idna==3.10
 importlib-metadata==8.5.0
 itsdangerous==2.2.0
 jinja2==3.1.6
@@ -12,9 +16,11 @@ MarkupSafe==2.1.5
 passlib==1.7.4
 pyasn1==0.4.8
 python-jose==3.4.0
+requests==2.32.3
 rsa==4.9
 six==1.17.0
 sqlalchemy==2.0.40
 typing-extensions==4.13.1
+urllib3==2.2.3
 werkzeug==3.0.6
 zipp==3.20.2
