@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from models import db, User
-from jose import jwt
+from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from flask import current_app
 
@@ -29,24 +29,25 @@ def login():
     data = request.json
     username = data.get('username')
     password = data.get('password')
-    print(username, password)
     user = User.query.filter_by(username=username).first()
     if not user or not user.check_password(password):
         return jsonify({"message": "Invalid credentials"}), 401
 
-    token = jwt.encode({
-        'sub': user.id,
-        'exp': datetime.utcnow() + timedelta(hours=1)
-    }, current_app.config['SECRET_KEY'], algorithm='HS256')
-
+    token = jwt.encode({"sub": f"{user.id}", "iat": datetime.utcnow()}, key=current_app.config['SECRET_KEY'], algorithm='HS256')
+    print(user.id, datetime.utcnow() + timedelta(hours=10))
     return jsonify({"token": token, "is_admin": user.is_admin}), 200
 
 
 @auth_bp.route('/admin/users', methods=['GET'])
 def get_users():
-    token = request.headers.get('Authorization').split()[1]
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({"message": "Missing or invalid Authorization header"}), 401
+
+    token = auth_header.split()[1]
+
     try:
-        payload = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        payload = jwt.decode(token, key=current_app.config['SECRET_KEY'], algorithms=['HS256'])
         user = User.query.get(payload['sub'])
 
         if not user.is_admin:
@@ -58,8 +59,10 @@ def get_users():
         return jsonify(users_data), 200
     except jwt.ExpiredSignatureError:
         return jsonify({"message": "Token has expired"}), 401
-    except jwt.JWTError:
+    except JWTError:
         return jsonify({"message": "Invalid token"}), 401
+    except Exception as e:
+        return jsonify({"message": f"An error occurred: {str(e)}"}), 400
 
 
 @auth_bp.route('/admin/user/<user_id>', methods=['DELETE'])
